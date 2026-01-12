@@ -417,48 +417,48 @@
     <script>
         // Global state
         let currentFilter = 'all';
-        
+
         // Load books on page load
         document.addEventListener('DOMContentLoaded', () => {
             loadBooks();
         });
-        
+
         // Load books from API
         async function loadBooks(status = null) {
             try {
                 document.getElementById('loading').style.display = 'block';
                 document.getElementById('book-list').style.display = 'none';
-                
+
                 let url = '/api/books';
                 if (status) {
                     url += `?status=${status}`;
                 }
-                
+
                 const response = await fetch(url);
                 const data = await response.json();
-                
+
                 displayBooks(data.books);
                 updateStatistics(data.statistics);
-                
+
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('book-list').style.display = 'grid';
-                
+
             } catch (error) {
                 console.error('Error loading books:', error);
                 alert('Failed to load books. Please try again.');
                 document.getElementById('loading').style.display = 'none';
             }
         }
-        
+
         // Display books in grid
         function displayBooks(books) {
             const container = document.getElementById('book-list');
-            
+
             if (books.length === 0) {
                 container.innerHTML = '<div class="no-books">📚 No books found</div>';
                 return;
             }
-            
+
             container.innerHTML = books.map(book => `
                 <div class="book-card">
                     <h3>${escapeHtml(book.title)}</h3>
@@ -468,34 +468,34 @@
                         ${book.status === 'available' ? '✅' : '📖'} ${book.status.toUpperCase()}
                     </span>
                     <div class="actions">
-                        ${book.status === 'available' 
-                            ? `<button class="btn btn-success" onclick="borrowBook(${book.id})">Borrow</button>`
-                            : `<button class="btn btn-warning" onclick="returnBook(${book.id})">Return</button>`
-                        }
+                        ${book.status === 'available'
+                    ? `<button class="btn btn-success" onclick="borrowBook(${book.id})">Borrow</button>`
+                    : `<button class="btn btn-warning" onclick="returnBook(${book.id})">Return</button>`
+                }
                         <button class="btn btn-secondary" onclick="editBook(${book.id})">Edit</button>
                         <button class="btn btn-danger" onclick="deleteBook(${book.id})">Delete</button>
                     </div>
                 </div>
             `).join('');
         }
-        
+
         // Update statistics
         function updateStatistics(stats) {
             document.getElementById('stat-available').textContent = stats.available;
             document.getElementById('stat-borrowed').textContent = stats.borrowed;
             document.getElementById('stat-total').textContent = stats.total;
         }
-        
+
         // Filter books
         function filterBooks(status) {
             currentFilter = status;
-            
+
             // Update active button
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
-            
+
             // Load books with filter
             if (status === 'all') {
                 loadBooks();
@@ -503,7 +503,7 @@
                 loadBooks(status);
             }
         }
-        
+
         // Show add book modal
         function showAddModal() {
             document.getElementById('modal-title').textContent = 'Add New Book';
@@ -511,23 +511,23 @@
             document.getElementById('book-id').value = '';
             document.getElementById('book-modal').style.display = 'flex';
         }
-        
+
         // Close modal
         function closeModal() {
             document.getElementById('book-modal').style.display = 'none';
         }
-        
+
         // Handle form submit
         async function handleSubmit(event) {
             event.preventDefault();
-            
+
             const id = document.getElementById('book-id').value;
             const bookData = {
                 title: document.getElementById('title').value,
                 author: document.getElementById('author').value,
                 isbn: document.getElementById('isbn').value
             };
-            
+
             try {
                 let response;
                 if (id) {
@@ -545,106 +545,106 @@
                         body: JSON.stringify(bookData)
                     });
                 }
-                
+
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.error);
                 }
-                
+
                 alert(id ? 'Book updated successfully!' : 'Book added successfully!');
                 closeModal();
                 loadBooks(currentFilter === 'all' ? null : currentFilter);
-                
+
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         }
-        
+
         // Edit book
         async function editBook(id) {
             try {
                 const response = await fetch(`/api/books/${id}`);
                 const book = await response.json();
-                
+
                 document.getElementById('modal-title').textContent = 'Edit Book';
                 document.getElementById('book-id').value = book.id;
                 document.getElementById('title').value = book.title;
                 document.getElementById('author').value = book.author;
                 document.getElementById('isbn').value = book.isbn;
-                
+
                 document.getElementById('book-modal').style.display = 'flex';
-                
+
             } catch (error) {
                 alert('Error loading book details: ' + error.message);
             }
         }
-        
+
         // Borrow book
         async function borrowBook(id) {
             if (!confirm('Do you want to borrow this book?')) return;
-            
+
             try {
                 const response = await fetch(`/api/books/${id}/borrow`, {
                     method: 'PATCH'
                 });
-                
+
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.error);
                 }
-                
+
                 alert('Book borrowed successfully!');
                 loadBooks(currentFilter === 'all' ? null : currentFilter);
-                
+
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         }
-        
+
         // Return book
         async function returnBook(id) {
             if (!confirm('Do you want to return this book?')) return;
-            
+
             try {
                 const response = await fetch(`/api/books/${id}/return`, {
                     method: 'PATCH'
                 });
-                
+
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.error);
                 }
-                
+
                 alert('Book returned successfully!');
                 loadBooks(currentFilter === 'all' ? null : currentFilter);
-                
+
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         }
-        
+
         // Delete book
         async function deleteBook(id) {
             if (!confirm('Are you sure you want to delete this book?')) return;
-            
+
             try {
                 const response = await fetch(`/api/books/${id}`, {
                     method: 'DELETE'
                 });
-                
+
                 if (!response.ok) {
                     const error = await response.json();
                     throw new Error(error.error);
                 }
-                
+
                 alert('Book deleted successfully!');
                 loadBooks(currentFilter === 'all' ? null : currentFilter);
-                
+
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         }
-        
+
         // Escape HTML to prevent XSS
         function escapeHtml(text) {
             const map = {
