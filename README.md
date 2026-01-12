@@ -1,4 +1,4 @@
-# 📚 Library Management System – Layered Architecture
+# 📚 Library Management System – Monolithic and Layered Architecture
 
 ## 📋 Project Information
 
